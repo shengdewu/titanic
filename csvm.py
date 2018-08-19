@@ -6,7 +6,7 @@ class csvm(object):
         self.__train_kernel = svm.SVC(C=2.0,kernel='rbf',gamma=0.001)
         pass
 
-    def train(self, train_data, test_data):
+    def train(self, train_data):
         '''
         :param train_data: (ndims*1,1)
         :param test_data:
@@ -16,19 +16,10 @@ class csvm(object):
 
         self.__train_kernel.fit(train_data[1], train_data[0])
 
-        if test_data:
-            y_predict = self.__train_kernel.predict(test_data[1])
+        acc_svc = round(self.__train_kernel.score(train_data[1], train_data[0]) * 100, 2)
+        print("correct %f" % acc_svc)
 
-            predict_result = []
-            if len(y_predict) == len(test_data[0]):
-                for i in range(len(y_predict)):
-                    predict_result.append((y_predict[i], test_data[0][i]))
-
-            if predict_result:
-                correct_cnt = sum(int(x == y) for x, y in predict_result)
-                print("tatal %d correct %d %lf" %(len(y_predict), correct_cnt, correct_cnt/len(y_predict)))
-            else:
-                print("test data invalid")
+        return
 
 
     def predict(self, input):
