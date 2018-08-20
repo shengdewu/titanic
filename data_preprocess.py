@@ -21,15 +21,16 @@ class data_preprocess(object):
         :return:
         '''
         abs_path = os.path.abspath(path)
-        csv_data = pd.read_csv(abs_path, header=0, dtype={'Age': np.float, 'Fare':np.float})
+        csv_data = pd.read_csv(abs_path) #, header=0, dtype={'Age': np.float, 'Fare':np.float}
 
         data = self.clear_feature(csv_data, test)
 
         return data
 
-    def clear_feature(self, data_set, test = False):
+    def clear_feature(self, data_set, test=False):
 
         data_visual_tool = data_visual.data_visual()
+        #data_visual_tool.analyse_data(data_set)
 
         #data_visual_tool.draw_info(data_set)
 
@@ -39,7 +40,7 @@ class data_preprocess(object):
         #data_visual_tool.draw_point(data_set, 'Embarked', *attr)
         #data_visual_tool.draw_barplot(data_set, 'Embarked', 'Survived', *attr)
 
-        data_set['Sex'] = data_set['Sex'].apply(lambda x: 1 if 'male' == x else 0)
+        data_set = data_set.drop(['Cabin', 'Ticket'], axis=1)
 
         #创建新的特征
         data_set['Title'] = data_set['Name'].str.extract('([A-Za-z]+)\.', expand=False)
@@ -59,46 +60,45 @@ class data_preprocess(object):
         data_set['Title'] = data_set['Title'].map(title_mapping)
         data_set['Title'] = data_set['Title'].fillna(0)
 
+        data_set = data_set.drop(labels='Name', axis=1)
+        data_set = data_set.drop(labels='PassengerId', axis=1)
 
+        data_set['Sex'] = data_set['Sex'].map( {'female': 1, 'male': 0} ).astype(int)
         #使用众数填充
         #data_set['Age'] = self.fill_with_mode(data_set, 'Age')
-        guess_ages = np.zeros((2, 3))
-        for i in range(0, 2):
-            for j in range(0, 3):
-                guess_df = data_set[(data_set['Sex'] == i) & (data_set['Pclass'] == j + 1)]['Age'].dropna()
 
-                # age_mean = guess_df.mean()
-                # age_std = guess_df.std()
-                # age_guess = rnd.uniform(age_mean - age_std, age_mean + age_std)
+        data_set.loc[data_set['Age'].isnull(), 'Age'] = data_set.groupby('Pclass')['Age'].transform('mean')
 
-                age_guess = guess_df.median()
+        #data_set = self.group_and_sort(data_set, 'Age', True, 4)
 
-                # Convert random age float to nearest .5 age
-                guess_ages[i, j] = int(age_guess / 0.5 + 0.5) * 0.5
+        # data_set.loc[data_set['Age'] <= 16, 'Age'] = 0
+        # data_set.loc[(data_set['Age'] > 16) & (data_set['Age'] <= 32), 'Age'] = 1
+        # data_set.loc[(data_set['Age'] > 32) & (data_set['Age'] <= 48), 'Age'] = 2
+        # data_set.loc[(data_set['Age'] > 48) & (data_set['Age'] <= 64), 'Age'] = 3
+        # data_set.loc[data_set['Age'] > 64, 'Age']
 
-        for i in range(0, 2):
-            for j in range(0, 3):
-                data_set.loc[(data_set.Age.isnull()) & (data_set.Sex == i) & (data_set.Pclass == j + 1), 'Age'] = guess_ages[i, j]
+        data_set.loc[data_set['Age'] <= 20, 'Age'] = 0
+        data_set.loc[(data_set['Age'] > 20) & (data_set['Age'] <= 40), 'Age'] = 1
+        data_set.loc[(data_set['Age'] > 40) & (data_set['Age'] <= 60), 'Age'] = 2
+        data_set.loc[data_set['Age'] > 60, 'Age'] = 3
 
-        data_set['Age'] = data_set['Age'].astype(int)
+        data_set['FamilySize'] = data_set['SibSp'] + data_set['Parch'] + 1
+        #data_set = self.group_and_sort(data_set, 'FamilySize')
+        data_set['IsAlone'] = 0
+        data_set.loc[data_set['FamilySize']==1, 'IsAlone'] = 1
+        data_set = data_set.drop(['FamilySize', 'SibSp', 'Parch'], axis=1)
 
-        data_set['Fare'] = self.fill_with_mode(data_set, 'Fare')
+        data_set['Age*Class'] = data_set['Age'] * data_set['Pclass']
+
         data_set['Embarked'] = self.fill_with_mode(data_set, 'Embarked')
+        data_set['Embarked'] = data_set['Embarked'].map({'S': 0, 'C': 1, 'Q': 2}).astype(int)
+
+        #data_set['Fare'].fillna(data_set['Fare'].dropna().median(), inplace=True)
+        data_set['Fare'] = self.fill_with_mode(data_set, 'Fare')
+        #print(data_set['Fare'].mean())
 
         #归一化特征
         #data_set = self.group_and_sort(data_set, 'Age', True, 5)
-
-        data_set.loc[data_set['Age'] <= 16, 'Age'] = 0
-        data_set.loc[(data_set['Age'] > 16) & (data_set['Age'] <= 32), 'Age'] = 1
-        data_set.loc[(data_set['Age'] > 32) & (data_set['Age'] <= 48), 'Age'] = 2
-        data_set.loc[(data_set['Age'] > 48) & (data_set['Age'] <= 64), 'Age'] = 3
-        data_set.loc[data_set['Age'] > 64, 'Age']
-
-        data_set['FamilySize'] = data_set['SibSp'] + data_set['Parch'] + 1
-        data_set = self.group_and_sort(data_set, 'FamilySize')
-
-        data_set['IsAlone'] = 0
-        data_set.loc[data_set['FamilySize']==1, 'IsAlone'] = 1
 
         #data_set = self.group_and_sort(data_set, 'Fare', True, 4)
 
@@ -106,19 +106,7 @@ class data_preprocess(object):
         data_set.loc[(data_set['Fare'] > 17.91) & (data_set['Fare'] <= 14.454), 'Fare'] = 1
         data_set.loc[(data_set['Fare'] > 14.454) & (data_set['Fare'] <= 31.0), 'Fare'] = 2
         data_set.loc[data_set['Fare'] > 31.0, 'Fare'] = 3
-
-
-        data_set['Embarked'] = data_set['Embarked'].map({'S': 0, 'C': 1, 'Q': 2}).astype(int)
-
-        data_set['Age*Class'] = data_set['Age'] * data_set['Pclass']
-
-        data_set = data_set.drop(labels='Cabin', axis=1)
-        data_set = data_set.drop(labels='FamilySize', axis=1)
-        data_set = data_set.drop(labels='SibSp', axis=1)
-        data_set = data_set.drop(labels='Parch', axis=1)
-        data_set = data_set.drop(labels='Ticket', axis=1)
-        data_set = data_set.drop(labels='Name', axis=1)
-        data_set = data_set.drop(labels='PassengerId', axis=1)
+        data_set['Fare'] = data_set['Fare'].astype(int)
 
         data = []
         if not test:

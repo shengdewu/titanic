@@ -4,6 +4,14 @@ import seaborn as sns
 
 class data_visual(object):
 
+    def analyse_data(self, data_set):
+        #sns.boxplot(x='Survived', y='Fare', data=data_set)
+        print(data_set.groupby('Survived').mean()[['Fare']])
+        print(data_set[data_set['Fare'] >= 500]['Survived'])
+        sns.boxplot(x='Survived', y='Fare', data=data_set[data_set['Fare'] < 500])
+        sns.distplot(data_set['Fare'], bins=80, kde=True, color='b')
+        return
+
     def plot_map(self, data_set):
         '''
         热力图 协方差
