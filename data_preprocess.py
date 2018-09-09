@@ -45,9 +45,6 @@ class data_preprocess(object):
 
         #data_visual_tool.draw_point(data_set, 'Ticket', 'Survived')
 
-        chi2 = chi_square.chi_square()
-        freedom, chi_val = chi2.checkout(data_set, ['Survived', 'Sex', 'Pclass'])
-
         data_set = data_set.drop(['Cabin', 'Ticket'], axis=1)
 
         #创建新的特征
@@ -115,6 +112,9 @@ class data_preprocess(object):
         data_set.loc[(data_set['Fare'] > 14.454) & (data_set['Fare'] <= 31.0), 'Fare'] = 2
         data_set.loc[data_set['Fare'] > 31.0, 'Fare'] = 3
         data_set['Fare'] = data_set['Fare'].astype(int)
+
+        chi2 = chi_square.chi_square()
+        freedom, chi_val = chi2.checkout(data_set, ['Survived', 'Embarked', 'Fare'])
 
         data = []
         if not test:

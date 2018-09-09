@@ -8,7 +8,7 @@ class chi_square(object):
         '''
         :param data_set:
         :param condition: the first one is must label
-        :return:
+        :return: cfreedom, hi_val
         '''
         data_ci = data_set.loc[:, condition]
         data_group = data_ci.groupby(condition[0])
