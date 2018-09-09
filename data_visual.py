@@ -107,7 +107,7 @@ class data_visual(object):
         :param attr:
         :return:
         '''
-        gf = sns.FacetGrid(data_set, row=row, size=2.2, aspect=1.6)
+        gf = sns.FacetGrid(data_set, row=row, height=2.2, aspect=1.6)
         gf.map(sns.pointplot, *attr, palette='deep')
         gf.add_legend()
         print('visualizations')

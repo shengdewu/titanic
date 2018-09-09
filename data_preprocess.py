@@ -2,6 +2,9 @@ import pandas as pd
 import os
 import numpy as np
 import data_visual
+import chi_square
+from scipy.stats import chi2_contingency
+
 import sklearn.preprocessing as sk_pre
 
 def  length(x):
@@ -40,12 +43,17 @@ class data_preprocess(object):
         #data_visual_tool.draw_point(data_set, 'Embarked', *attr)
         #data_visual_tool.draw_barplot(data_set, 'Embarked', 'Survived', *attr)
 
+        #data_visual_tool.draw_point(data_set, 'Ticket', 'Survived')
+
+        chi2 = chi_square.chi_square()
+        freedom, chi_val = chi2.checkout(data_set, ['Survived', 'Sex', 'Pclass'])
+
         data_set = data_set.drop(['Cabin', 'Ticket'], axis=1)
 
         #创建新的特征
         data_set['Title'] = data_set['Name'].str.extract('([A-Za-z]+)\.', expand=False)
         #交叉表
-        print(pd.crosstab(data_set['Title'], data_set['Sex']))
+        print(pd.crosstab(data_set['SibSp'], data_set['Parch']))
 
         data_set['Title'] = data_set['Title'].replace(['Lady', 'Countess', 'Capt', 'Col', \
                                                      'Don', 'Dr', 'Major', 'Rev', 'Sir', 'Jonkheer', 'Dona'],
